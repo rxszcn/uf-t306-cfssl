@@ -1,5 +1,5 @@
 /*
- * ZLint Copyright 2023 Regents of the University of Michigan
+ * ZLint Copyright 2026 Regents of the University of Michigan
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy
@@ -23,14 +23,16 @@ import (
 type evOrgIdExtMissing struct{}
 
 func init() {
-	lint.RegisterLint(&lint.Lint{
-		Name: "e_ev_organization_id_missing",
-		Description: "Effective January 31, 2020, if the subject:organizationIdentifier field is " +
-			"present, this [cabfOrganizationIdentifier] field MUST be present.",
-		Citation:      "CA/Browser Forum EV Guidelines v1.7.0, Sec. 9.8.2",
-		Source:        lint.CABFEVGuidelines,
-		EffectiveDate: util.CABFEV_9_8_2,
-		Lint:          NewEvOrgIdExtMissing,
+	lint.RegisterCertificateLint(&lint.CertificateLint{
+		LintMetadata: lint.LintMetadata{
+			Name: "e_ev_organization_id_missing",
+			Description: "Effective January 31, 2020, if the subject:organizationIdentifier field is " +
+				"present, this [cabfOrganizationIdentifier] field MUST be present.",
+			Citation:      "CA/Browser Forum EV Guidelines v1.7.0, Sec. 9.8.2",
+			Source:        lint.CABFEVGuidelines,
+			EffectiveDate: util.CABFEV_9_8_2,
+		},
+		Lint: NewEvOrgIdExtMissing,
 	})
 }
 
@@ -39,7 +41,9 @@ func NewEvOrgIdExtMissing() lint.LintInterface {
 }
 
 func (l *evOrgIdExtMissing) CheckApplies(c *x509.Certificate) bool {
-	return util.IsEV(c.PolicyIdentifiers) && len(c.Subject.OrganizationIDs) > 0
+	return !c.IsCA &&
+		util.IsEV(c.PolicyIdentifiers) &&
+		len(c.Subject.OrganizationIDs) > 0
 }
 
 func (l *evOrgIdExtMissing) Execute(c *x509.Certificate) *lint.LintResult {
